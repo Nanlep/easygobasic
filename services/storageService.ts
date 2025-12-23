@@ -1,3 +1,4 @@
+
 import { DrugRequest, Consultation, AuditLog, RequestStatus, ConsultStatus, User, UserRole } from '../types';
 import { MOCK_USERS } from '../constants';
 
@@ -61,9 +62,14 @@ export const StorageService = {
     StorageService.logAudit('New Drug Request', 'System');
     return newReq;
   },
-  updateRequestStatus: (id: string, status: RequestStatus, aiAnalysis?: string) => {
+  updateRequestStatus: (id: string, status: RequestStatus, aiAnalysis?: string, aiSources?: { title: string; uri: string }[]): void => {
     const current = StorageService.getRequests();
-    const updated = current.map(r => r.id === id ? { ...r, status, aiAnalysis: aiAnalysis || r.aiAnalysis } : r);
+    const updated = current.map(r => r.id === id ? { 
+      ...r, 
+      status, 
+      aiAnalysis: aiAnalysis || r.aiAnalysis,
+      aiSources: aiSources || r.aiSources
+    } : r);
     localStorage.setItem(REQUESTS_KEY, JSON.stringify(updated));
     StorageService.logAudit(`Request ${id} updated to ${status}`, 'Admin');
   },
