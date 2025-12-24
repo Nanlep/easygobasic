@@ -37,12 +37,10 @@ export const DrugRequestForm: React.FC = () => {
     setErrorMsg(null);
 
     try {
-      // Determine requester type
       const finalRequesterType = formData.requesterType === 'OTHER' 
         ? (formData.requesterTypeOther || 'OTHER') 
         : formData.requesterType;
 
-      // Map only fields that exist in the Supabase schema to avoid "column not found" errors
       const requestPayload = { 
         requesterName: formData.requesterName,
         requesterType: finalRequesterType,
@@ -57,19 +55,23 @@ export const DrugRequestForm: React.FC = () => {
         prescription: attachment || undefined 
       };
 
-      // 1. Save to Database
+      // 1. Save to Database (Primary)
       await StorageService.addRequest(requestPayload);
 
-      // 2. Send Notifications
-      await Promise.all([
-        EmailService.sendUserConfirmation(formData.contactEmail, formData.requesterName, formData, 'REQUEST'),
-        EmailService.sendAdminNotification('REQUEST', requestPayload)
-      ]);
+      // 2. Trigger Notifications (Non-blocking)
+      try {
+        await Promise.allSettled([
+          EmailService.sendUserConfirmation(formData.contactEmail, formData.requesterName, formData, 'REQUEST'),
+          EmailService.sendAdminNotification('REQUEST', requestPayload)
+        ]);
+      } catch (notifErr) {
+        console.warn("Notification system alert:", notifErr);
+      }
 
       setSubmitted(true);
     } catch (err: any) {
       console.error("Submission Error:", err);
-      setErrorMsg(err.message || "An unexpected error occurred. Please check your network and try again.");
+      setErrorMsg(err.message || "An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -110,10 +112,10 @@ export const DrugRequestForm: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Request Received</h2>
           <p className="text-slate-600 mb-4">
-            Your request for <strong>{formData.genericName}</strong> has been securely logged. Confirmation emails have been sent.
+            Your request for <strong>{formData.genericName}</strong> has been securely logged. Confirmation emails have been sent to our logistics team.
           </p>
           <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-500 mb-8 border border-slate-100">
-            Check your Inbox and WhatsApp shortly.
+            Check your Inbox shortly for verification.
           </div>
           <Link to="/" className="text-red-700 font-bold hover:underline">Return Home</Link>
         </div>

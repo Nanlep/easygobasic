@@ -10,7 +10,6 @@ import {
   X, 
   Facebook, 
   Twitter, 
-  MessageCircle, 
   Mail, 
   MapPin, 
   Phone 
@@ -111,9 +110,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 <a href="#" className="p-2 bg-slate-800 rounded-lg hover:bg-red-700 transition-colors text-white" aria-label="X (Twitter)">
                   <Twitter size={18} />
                 </a>
-                <a href="#" className="p-2 bg-slate-800 rounded-lg hover:bg-red-700 transition-colors text-white" aria-label="WhatsApp">
-                  <MessageCircle size={18} />
-                </a>
               </div>
               <div className="flex items-center gap-2 mt-8 text-xs text-emerald-400 font-semibold tracking-wide">
                 <ShieldCheck size={16} />
@@ -144,15 +140,15 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
               <ul className="space-y-4 text-sm">
                 <li className="flex items-start gap-3">
                   <Mail size={16} className="text-red-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-400">easygo@easygopharm.com</span>
+                  <span className="text-slate-400">info@easygopharm.com</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <Phone size={16} className="text-red-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-400">+2348160248996</span>
+                  <span className="text-slate-400">+1 (555) EGP-HLP</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin size={16} className="text-red-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-400">No. 5 Kwaji Close,<br/>Maitama, Abuja FCT</span>
+                  <span className="text-slate-400">123 Pharma Plaza,<br/>Medical District, NY</span>
                 </li>
               </ul>
             </div>

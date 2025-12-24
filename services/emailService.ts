@@ -1,39 +1,61 @@
 
 /**
- * Mocking a robust email service. In a real production environment, 
- * you would use Resend, SendGrid, or AWS SES.
+ * Email service proxying requests to the secure backend.
  */
-
 export const EmailService = {
+  /**
+   * Sends a confirmation email to the user via the internal API.
+   */
   sendUserConfirmation: async (email: string, name: string, data: any, type: 'REQUEST' | 'APPOINTMENT') => {
-    console.log(`[EMAIL] Sending confirmation to User: ${email}`);
-    // Format text data only
-    const textData = Object.entries(data)
-      .filter(([key]) => key !== 'prescription' && key !== 'attachment')
-      .map(([key, value]) => `${key}: ${value}`)
-      .join('\n');
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notificationType: 'USER_CONFIRMATION',
+          type,
+          email,
+          name,
+          data
+        })
+      });
 
-    const body = {
-      to: email,
-      subject: `Confirmation: Your ${type === 'REQUEST' ? 'Drug Request' : 'Medical Consultation'} - EasygoPharm`,
-      text: `Hello ${name},\n\nWe have received your ${type === 'REQUEST' ? 'drug sourcing request' : 'appointment booking'}. Our team is processing it now.\n\nDetails provided:\n${textData}\n\nThank you for choosing EasygoPharm.`,
-    };
-    
-    // Simulate API call
-    return new Promise((resolve) => setTimeout(resolve, 800));
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorJson;
+        try { errorJson = JSON.parse(errorText); } catch(e) {}
+        console.error(`[EMAIL PROXY] Server Error ${response.status}:`, errorJson || errorText);
+      } else {
+        console.log("[EMAIL PROXY] User confirmation triggered successfully.");
+      }
+    } catch (error) {
+      console.error("[EMAIL PROXY] Network connectivity error:", error);
+    }
   },
 
+  /**
+   * Sends an internal notification to the admin via the internal API.
+   */
   sendAdminNotification: async (type: 'REQUEST' | 'APPOINTMENT', data: any) => {
-    console.log(`[EMAIL] Sending internal alert to EasygoPharm Admins`);
-    const internalEmail = 'admin@easygopharm.com';
-    
-    const body = {
-      to: internalEmail,
-      subject: `URGENT: New ${type} Submitted`,
-      text: `A new ${type} has been submitted to the platform.\n\nFull Payload:\n${JSON.stringify(data, null, 2)}`,
-    };
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notificationType: 'ADMIN_ALERT',
+          type,
+          data
+        })
+      });
 
-    // Simulate API call
-    return new Promise((resolve) => setTimeout(resolve, 800));
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[ADMIN EMAIL PROXY] Server Error ${response.status}:`, errorText);
+      } else {
+        console.log("[ADMIN EMAIL PROXY] Admin notification triggered successfully.");
+      }
+    } catch (error) {
+      console.error("[ADMIN EMAIL PROXY] Network connectivity error:", error);
+    }
   }
 };

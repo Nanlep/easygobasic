@@ -68,6 +68,20 @@ export const Dashboard: React.FC = () => {
     } catch (err: any) { alert(err.message); }
   };
 
+  // Improved AI Audit handler to save results and update state for Search Grounding compliance
+  const handleAIRequestAudit = async (req: DrugRequest) => {
+    setIsLoading(true);
+    try {
+      const { text, sources } = await analyzeDrugRequest(req.genericName, req.notes);
+      await StorageService.updateRequestStatus(req.id, req.status, text, sources);
+      refreshData();
+    } catch (err: any) {
+      alert("AI Audit failed: " + err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleLockToggle = async (id: string, type: 'REQUEST' | 'CONSULT', currentState: boolean) => {
     try {
       if (type === 'REQUEST') await StorageService.toggleRequestLock(id, !currentState);
@@ -165,6 +179,30 @@ export const Dashboard: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="font-bold text-slate-900">{req.requesterName}</div>
                     <div className="text-xs text-slate-500">{req.contactEmail}</div>
+                    {/* Display AI Analysis and Grounding Sources as required by guidelines */}
+                    {req.aiAnalysis && (
+                      <div className="mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] text-indigo-700 max-w-xs animate-in fade-in slide-in-from-top-1">
+                        <div className="flex items-center gap-1 font-black mb-1.5 uppercase tracking-wider">
+                          <Sparkles size={10} className="text-indigo-500" /> AI Assessment
+                        </div>
+                        <p className="line-clamp-4 leading-relaxed mb-2 font-medium">"{req.aiAnalysis}"</p>
+                        {req.aiSources && req.aiSources.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 pt-1.5 border-t border-indigo-100">
+                            {req.aiSources.map((s, idx) => (
+                              <a 
+                                key={idx} 
+                                href={s.uri} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center gap-1 px-2 py-0.5 bg-white border border-indigo-200 rounded-full hover:bg-indigo-100 transition-colors font-bold text-[8px]"
+                              >
+                                <ExternalLink size={8} /> {s.title}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center gap-2">
@@ -197,7 +235,14 @@ export const Dashboard: React.FC = () => {
                     </div>
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button onClick={() => analyzeDrugRequest(req.genericName, req.notes)} className="text-[10px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest">AI Audit</button>
+                    <button 
+                      onClick={() => handleAIRequestAudit(req)} 
+                      disabled={isLoading}
+                      className="inline-flex items-center gap-1 text-[10px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest disabled:opacity-50"
+                    >
+                      {isLoading ? <Loader2 size={10} className="animate-spin" /> : <BrainCircuit size={10} />}
+                      AI Audit
+                    </button>
                   </td>
                 </tr>
               ))}

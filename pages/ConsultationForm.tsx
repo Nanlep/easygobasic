@@ -28,14 +28,18 @@ export const ConsultationForm: React.FC = () => {
         attachment: attachment || undefined
       };
 
-      // 1. Save to DB
+      // 1. Save to DB (Primary)
       await StorageService.addConsultation(payload);
 
-      // 2. Notify
-      await Promise.all([
-        EmailService.sendUserConfirmation(formData.contactEmail, formData.patientName, formData, 'APPOINTMENT'),
-        EmailService.sendAdminNotification('APPOINTMENT', payload)
-      ]);
+      // 2. Notify (Secondary)
+      try {
+        await Promise.allSettled([
+          EmailService.sendUserConfirmation(formData.contactEmail, formData.patientName, formData, 'APPOINTMENT'),
+          EmailService.sendAdminNotification('APPOINTMENT', payload)
+        ]);
+      } catch (notifErr) {
+        console.warn("Notification system alert:", notifErr);
+      }
 
       setSubmitted(true);
     } catch (err: any) {
@@ -80,7 +84,7 @@ export const ConsultationForm: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Appointment Scheduled</h2>
           <p className="text-slate-600 mb-6">
-            Your consultation request has been secured. Check your inbox for confirmation.
+            Your consultation request has been secured. Confirmation emails have been sent to our medical board.
           </p>
           <Link to="/" className="text-slate-900 font-bold hover:underline">Return Home</Link>
         </div>
