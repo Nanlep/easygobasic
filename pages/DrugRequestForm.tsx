@@ -1,6 +1,7 @@
 
 import React, { useState } from 'react';
 import { StorageService } from '../services/storageService';
+import { EmailService } from '../services/emailService';
 import { Link } from 'react-router-dom';
 import { AlertCircle, CheckCircle, Upload, X, Info } from 'lucide-react';
 
@@ -26,22 +27,45 @@ export const DrugRequestForm: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.agreedToTerms) {
+      setErrorMsg("You must agree to the terms and privacy policy to proceed.");
+      return;
+    }
+
     setIsSubmitting(true);
     setErrorMsg(null);
 
     try {
-      // Map 'OTHER' requester type to the specified type
-      const submissionData = { ...formData };
-      if (submissionData.requesterType === 'OTHER') {
-        submissionData.requesterType = submissionData.requesterTypeOther || 'OTHER';
-      }
+      // Determine requester type
+      const finalRequesterType = formData.requesterType === 'OTHER' 
+        ? (formData.requesterTypeOther || 'OTHER') 
+        : formData.requesterType;
 
-      // Fix: Cast urgency to the required union type to resolve type mismatch on line 39
-      await StorageService.addRequest({ 
-        ...submissionData, 
-        urgency: submissionData.urgency as 'NORMAL' | 'HIGH' | 'CRITICAL',
+      // Map only fields that exist in the Supabase schema to avoid "column not found" errors
+      const requestPayload = { 
+        requesterName: formData.requesterName,
+        requesterType: finalRequesterType,
+        contactEmail: formData.contactEmail,
+        contactPhone: formData.contactPhone,
+        genericName: formData.genericName,
+        brandName: formData.brandName,
+        dosageStrength: formData.dosageStrength,
+        quantity: formData.quantity,
+        urgency: formData.urgency as 'NORMAL' | 'HIGH' | 'CRITICAL',
+        notes: formData.notes,
         prescription: attachment || undefined 
-      });
+      };
+
+      // 1. Save to Database
+      await StorageService.addRequest(requestPayload);
+
+      // 2. Send Notifications
+      await Promise.all([
+        EmailService.sendUserConfirmation(formData.contactEmail, formData.requesterName, formData, 'REQUEST'),
+        EmailService.sendAdminNotification('REQUEST', requestPayload)
+      ]);
+
       setSubmitted(true);
     } catch (err: any) {
       console.error("Submission Error:", err);
@@ -52,8 +76,9 @@ export const DrugRequestForm: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    const { name, value, type } = e.target;
+    const val = type === 'checkbox' ? (e.target as HTMLInputElement).checked : value;
+    setFormData(prev => ({ ...prev, [name]: val }));
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -85,10 +110,10 @@ export const DrugRequestForm: React.FC = () => {
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Request Received</h2>
           <p className="text-slate-600 mb-4">
-            Your request for <strong>{formData.genericName}</strong> has been securely logged in our global sourcing network.
+            Your request for <strong>{formData.genericName}</strong> has been securely logged. Confirmation emails have been sent.
           </p>
           <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-500 mb-8 border border-slate-100">
-            You will receive a confirmation via Email and WhatsApp shortly.
+            Check your Inbox and WhatsApp shortly.
           </div>
           <Link to="/" className="text-red-700 font-bold hover:underline">Return Home</Link>
         </div>
@@ -105,7 +130,7 @@ export const DrugRequestForm: React.FC = () => {
               <AlertCircle size={120} />
             </div>
             <h1 className="text-3xl font-bold">Rare Drug Sourcing</h1>
-            <p className="text-slate-400 mt-2 max-w-lg">Our global network and Gemini AI intelligence work in tandem to locate orphan therapeutics and manage specialized logistics.</p>
+            <p className="text-slate-400 mt-2 max-w-lg">Our global network and Gemini AI intelligence work in tandem to locate orphan therapeutics.</p>
           </div>
           
           <form onSubmit={handleSubmit} className="p-8 md:p-12 space-y-10">
@@ -146,7 +171,7 @@ export const DrugRequestForm: React.FC = () => {
                   <input required name="contactEmail" type="email" className="w-full rounded-xl border-slate-200 p-3 border font-medium" placeholder="notifications@example.com" onChange={handleChange} />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Phone Number (WhatsApp Ready)</label>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Phone Number</label>
                   <input required name="contactPhone" type="tel" className="w-full rounded-xl border-slate-200 p-3 border font-medium" placeholder="+1 (555) 000-0000" onChange={handleChange} />
                 </div>
               </div>
@@ -229,25 +254,34 @@ export const DrugRequestForm: React.FC = () => {
                 <span className="w-8 h-8 bg-red-100 text-red-700 rounded-lg flex items-center justify-center text-sm">03</span>
                 Clinical Context
               </h3>
-              <div>
-                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Additional Notes</label>
-                <textarea name="notes" rows={4} className="w-full rounded-xl border-slate-200 p-4 border font-medium focus:ring-red-500" placeholder="Mention known allergies, previous sourcing attempts, or specific manufacturing requirements..." onChange={handleChange}></textarea>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Additional Notes</label>
+                  <textarea name="notes" rows={4} className="w-full rounded-xl border-slate-200 p-4 border font-medium focus:ring-red-500" placeholder="Mention known allergies, previous sourcing attempts..." onChange={handleChange}></textarea>
+                </div>
+                
+                <div className="flex items-start gap-3 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                  <input 
+                    id="agreedToTerms" 
+                    name="agreedToTerms" 
+                    type="checkbox" 
+                    checked={formData.agreedToTerms}
+                    onChange={handleChange}
+                    className="mt-1 h-5 w-5 text-red-600 border-slate-300 rounded focus:ring-red-500"
+                  />
+                  <label htmlFor="agreedToTerms" className="text-sm text-slate-600 leading-tight">
+                    I confirm that the information provided is accurate and I agree to the <Link to="/legal/terms" className="text-red-700 font-bold hover:underline">Terms of Use</Link> and <Link to="/legal/privacy" className="text-red-700 font-bold hover:underline">Privacy Policy</Link>.
+                  </label>
+                </div>
               </div>
             </section>
-
-            <div className="flex items-start gap-4 p-6 bg-slate-50 rounded-2xl border border-slate-100">
-              <input required type="checkbox" id="terms" className="mt-1 h-5 w-5 text-red-600 border-slate-300 rounded focus:ring-red-500" />
-              <label htmlFor="terms" className="text-sm text-slate-600 leading-relaxed">
-                I authorize EasygoPharm to process this data for sourcing purposes. I acknowledge that all PHI is handled according to SOC 2 Type II privacy standards.
-              </label>
-            </div>
 
             <button 
               type="submit" 
               disabled={isSubmitting}
               className="w-full py-5 bg-slate-900 text-white font-bold rounded-2xl hover:bg-slate-800 transition-all shadow-xl disabled:opacity-50 flex items-center justify-center gap-3"
             >
-              {isSubmitting ? <Info className="animate-spin" /> : null}
+              {isSubmitting && <Info className="animate-spin" />}
               {isSubmitting ? 'Securing Data...' : 'Submit Sourcing Request'}
             </button>
           </form>

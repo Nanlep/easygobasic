@@ -1,60 +1,98 @@
-# EasygoPharm - Deployment Guide
+# EasygoPharm (EGP)
 
-## Overview
-EasygoPharm is a robust, SOC 2 Type 2 and ISO 27001 compliant platform designed for rare drug sourcing and expert medical consultations. This document provides instructions for deploying the application to a production environment.
+EasygoPharm is a high-performance, SOC 2 compliant pharmaceutical logistics and medical triage platform. It leverages Google Gemini AI for drug intelligence and Supabase for secure, scalable data persistence. The platform is designed to streamline the procurement of rare (orphan) medications and facilitate expert medical consultations through a zero-trust architecture.
 
-## Prerequisites
-*   **Web Server**: Any static file server (Nginx, Apache, AWS S3 + CloudFront, Vercel, Netlify).
-*   **Environment Variables**: A valid Google Gemini API Key.
-*   **SSL/TLS**: Mandatory for production to meet compliance standards (HTTPS).
+---
 
-## Deployment Instructions
+## 🚀 Key Features
 
-### 1. Application Build
-This application is built using standard ES Modules and React. It does not require a complex build step if served correctly, but using a bundler like Vite is recommended for production optimization.
+- **Rare Drug Sourcing**: Automated intake for orphan drug requests with AI-powered logistics analysis.
+- **Medical Triage**: Seamless scheduling for medical consultations with encrypted document handling.
+- **AI-Driven Insights**: Utilizes Gemini 3 Flash and Google Search grounding for real-time pharmaceutical intelligence.
+- **Live Voice Assistant**: Real-time voice interaction using Gemini Live API for patient intake and triage.
+- **Easygo Command**: A robust administrative dashboard with RBAC (Role-Based Access Control) and performance analytics.
+- **SOC 2 & ISO 27001 Alignment**: Security-first design featuring immutable audit logs and AES-256 data encryption.
 
-**If serving statically (No Build):**
-1.  Deploy all files to your web root.
-2.  Ensure `index.html` is the entry point.
-3.  Configure your web server to handle Single Page Application (SPA) routing (redirect all 404 requests to `index.html`).
+---
 
-**If using a bundler (Recommended):**
-1.  Install dependencies: `npm install`
-2.  Build the project: `npm run build`
-3.  Deploy the `dist/` folder.
+## 🛠️ Tech Stack
 
-### 2. Environment Configuration
-The application requires the following environment variable to be available at runtime or build time:
+- **Frontend**: React 19, TypeScript, Tailwind CSS
+- **Bundler**: Vite
+- **AI Engine**: Google Gemini API (@google/genai)
+- **Backend/Database**: Supabase
+- **Visualization**: Recharts
+- **Icons**: Lucide React
 
-*   `API_KEY`: Your Google Gemini API Key.
-    *   *Note*: Ensure this key is restricted to your production domain in the Google Cloud Console to prevent unauthorized usage.
+---
 
-### 3. First-Run Initialization
-Upon the first launch, the system uses browser Local Storage for persistence.
-1.  **Default Admin**: The system initializes with default credentials if the database is empty (check `constants.ts` for demo seeds).
-2.  **Action Required**:
-    *   Log in using the provided administrative credentials.
-    *   Navigate to the **Dashboard > User Management** tab.
-    *   Create a new Super Admin account with a strong, compliant password.
+## 💻 Local Testing & Development
 
-## Architecture & Production Roadmap
-**IMPORTANT**: This application currently runs in a "Standalone Client" mode using Local Storage. For a multi-user production environment, the following architectural updates are required:
+### 1. Prerequisites
+- Node.js (v18+)
+- npm or yarn
+- A Supabase Project
+- A Google Gemini API Key
 
-1.  **Backend Integration**: 
-    *   Replace `services/storageService.ts` with an API Client.
-    *   Connect to a centralized database (e.g., PostgreSQL, Firebase, Supabase) to allow data sharing between Admins, Doctors, and Pharmacists across different devices.
-2.  **Authentication**:
-    *   Replace the mock `login` function with a secure Identity Provider (Auth0, AWS Cognito, etc.).
-3.  **Security**:
-    *   Enable WAF (Web Application Firewall) on your hosting provider.
-    *   Implement Content Security Policy (CSP) headers.
+### 2. Installation
+```bash
+# Clone the repository
+git clone <repository-url>
 
-## Compliance & Security
-To maintain SOC 2 and ISO 27001 compliance:
-*   **Hosting**: Host the application in a secure, audited environment (e.g., AWS, GCP, Azure).
-*   **Access**: Restrict access to the `/admin` route if possible via WAF rules, or rely on the application's authentication.
-*   **Audit Logs**: The application logs critical actions. Ensure these logs are preserved or sent to a centralized logging server in the production API implementation.
+# Install dependencies
+npm install
+```
 
-## Developer Notes
-*   **Tech Stack**: React 19, Tailwind CSS, Recharts, Lucide React, Google GenAI SDK.
-*   **Entry Point**: `index.tsx` loads the application into the `#root` element in `index.html`.
+### 3. Environment Configuration
+Create a `.env` file in the root directory or configure your environment with the following keys:
+
+```env
+# Google Gemini API Key
+GEMINI_API_KEY=your_gemini_api_key_here
+
+# Supabase Configuration
+SUPABASE_URL=https://your-project-id.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+```
+
+*Note: In the current development build, Supabase credentials are pre-configured in `services/supabaseClient.ts` for immediate local testing.*
+
+### 4. Running the App
+```bash
+npm run dev
+```
+The application will be available at `http://localhost:3000`.
+
+---
+
+## 🌍 Live Deployment
+
+### Production Build
+To generate a production-ready static build:
+```bash
+npm run build
+```
+The output will be in the `dist/` directory.
+
+### Deployment Steps
+1. **Static Hosting**: Upload the contents of `dist/` to your preferred provider (Vercel, Netlify, AWS S3, or Nginx).
+2. **SPA Routing**: Ensure your host is configured to redirect all 404 requests to `index.html` to support client-side routing.
+3. **Environment Variables**: Set the `GEMINI_API_KEY` in your CI/CD pipeline or hosting dashboard.
+4. **SSL/TLS**: HTTPS is strictly required for SOC 2 compliance and for the browser to allow Microphone/Camera access for the Live Assistant.
+
+---
+
+## 🛡️ Security & Compliance
+
+EasygoPharm implements a **Zero-Trust Architecture**:
+- **Authentication**: Secure staff login with session management.
+- **Data Integrity**: All drug requests and audit logs are stored in Supabase with row-level security (RLS).
+- **Audit Trails**: Every administrative action is logged with an immutable timestamp and integrity hash.
+- **Encrypted Storage**: Attachments (prescriptions/files) are handled with high-entropy encryption before storage.
+
+---
+
+## 📞 Support & Contact
+For technical inquiries or security whitepaper requests, contact the engineering team at `info@easygopharm.com`.
+
+&copy; 2025 EasygoPharm Inc. All rights reserved.
