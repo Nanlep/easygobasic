@@ -2,16 +2,21 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
 // Use a factory function to always get a fresh instance with the latest key
-export const getAIInstance = () => new GoogleGenAI({ apiKey: process.env.API_KEY });
+export const getAIInstance = () => {
+  const key = process.env.API_KEY;
+  if (!key || key === "undefined" || key === "") {
+    throw new Error("AI Configuration Missing: The API Key was not found at build time. Please ensure GEMINI_API_KEY is set in Vercel and trigger a fresh deployment.");
+  }
+  return new GoogleGenAI({ apiKey: key });
+};
 
 /**
  * Analyzes a drug request using Gemini 3 Flash and Google Search grounding.
  * Returns both the assessment text and the extracted grounding sources.
  */
 export const analyzeDrugRequest = async (drugName: string, notes: string): Promise<{ text: string, sources: { title: string, uri: string }[] }> => {
-  const ai = getAIInstance();
-
   try {
+    const ai = getAIInstance();
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
       contents: `
@@ -45,12 +50,9 @@ export const analyzeDrugRequest = async (drugName: string, notes: string): Promi
       .filter((source: any) => source.uri);
 
     return { text, sources };
-  } catch (error) {
+  } catch (error: any) {
     console.error("Gemini analysis failed:", error);
-    return { 
-      text: "AI Analysis failed due to a technical error. Please check your network or API configuration.", 
-      sources: [] 
-    };
+    throw error; // Re-throw so the UI can catch it and display the message
   }
 };
 
@@ -58,9 +60,8 @@ export const analyzeDrugRequest = async (drugName: string, notes: string): Promi
  * Summarizes consultation details using Gemini.
  */
 export const summarizeConsultation = async (reason: string): Promise<string> => {
-  const ai = getAIInstance();
-  
   try {
+     const ai = getAIInstance();
      const prompt = `Summarize the following patient consultation reason into a medical category (e.g., Cardiology, Dermatology, General) and a 1-sentence triage summary: "${reason}"`;
      
      const response = await ai.models.generateContent({
