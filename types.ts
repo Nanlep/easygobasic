@@ -8,13 +8,12 @@ export enum UserRole {
 
 export enum RequestStatus {
   PENDING = 'PENDING',
-  PROCESSING = 'PROCESSING',
-  FULFILLED = 'FULFILLED',
-  REJECTED = 'REJECTED'
+  COMPLETED = 'COMPLETED',
+  CANCELLED = 'CANCELLED'
 }
 
 export enum ConsultStatus {
-  SCHEDULED = 'SCHEDULED',
+  PENDING = 'PENDING',
   COMPLETED = 'COMPLETED',
   CANCELLED = 'CANCELLED'
 }
@@ -24,6 +23,8 @@ export interface User {
   username: string;
   role: UserRole;
   name: string;
+  createdAt: string;
+  status: 'ACTIVE' | 'INACTIVE';
 }
 
 export interface DrugRequest {
@@ -43,6 +44,7 @@ export interface DrugRequest {
   aiAnalysis?: string;
   aiSources?: { title: string; uri: string }[];
   prescription?: { fileName: string; data: string; mimeType: string };
+  isLocked?: boolean;
 }
 
 export interface Consultation {
@@ -56,6 +58,7 @@ export interface Consultation {
   createdAt: string;
   doctorNotes?: string;
   attachment?: { fileName: string; data: string; mimeType: string };
+  isLocked?: boolean;
 }
 
 export interface AuditLog {
