@@ -148,7 +148,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
                 </li>
                 <li className="flex items-start gap-3">
                   <MapPin size={16} className="text-red-500 shrink-0 mt-0.5" />
-                  <span className="text-slate-400">No. 5 Kwaji Close, <br/>Maitama, Abuja FCT</span>
+                  <span className="text-slate-400">29 Lingu Crescent, off Aminu Kano<br/>Wuse 2, Abuja FCT</span>
                 </li>
               </ul>
             </div>
