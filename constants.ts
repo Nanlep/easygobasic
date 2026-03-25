@@ -1,15 +1,5 @@
 
-import { UserRole } from './types';
-
 export const APP_NAME = "EasygoPharm";
-
-const now = new Date().toISOString();
-
-export const MOCK_USERS = [
-  { id: '1', username: 'admin', password: 'password', role: UserRole.SUPER_ADMIN, name: 'System Administrator', createdAt: now, status: 'ACTIVE' },
-  { id: '2', username: 'doctor', password: 'password', role: UserRole.DOCTOR, name: 'Doctor', createdAt: now, status: 'ACTIVE' },
-  { id: '3', username: 'pharm', password: 'password', role: UserRole.PHARMACIST, name: 'Pharmacist', createdAt: now, status: 'ACTIVE' },
-];
 
 export const TERMS_TEXT = `
 1. Acceptance of Terms: By accessing EasygoPharm, you agree to be bound by these Terms of Use.

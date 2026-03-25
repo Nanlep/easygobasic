@@ -1,74 +1,52 @@
 
-import { GoogleGenAI, Modality } from "@google/genai";
-
-// Use a factory function to always get a fresh instance with the latest key
-export const getAIInstance = () => {
-  const key = process.env.API_KEY;
-  if (!key || key === "undefined" || key === "") {
-    throw new Error("AI Configuration Missing: The API Key was not found at build time. Please ensure GEMINI_API_KEY is set in Vercel and trigger a fresh deployment.");
-  }
-  return new GoogleGenAI({ apiKey: key });
-};
+/**
+ * Gemini AI Service — Client-side proxy to /api/ai-analyze
+ * 
+ * All AI calls are now routed through the serverless function
+ * so the API key stays server-side and is never exposed to the browser.
+ */
 
 /**
- * Analyzes a drug request using Gemini 3 Flash and Google Search grounding.
- * Returns both the assessment text and the extracted grounding sources.
+ * Analyzes a drug request via the AI proxy endpoint.
+ * Returns the assessment text and grounding sources.
  */
 export const analyzeDrugRequest = async (drugName: string, notes: string): Promise<{ text: string, sources: { title: string, uri: string }[] }> => {
   try {
-    const ai = getAIInstance();
-    const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: `
-        You are a pharmaceutical logic assistant for a rare drug sourcing platform.
-        Analyze the following drug request:
-        Drug Name: ${drugName}
-        Patient Notes: ${notes}
-
-        Please provide a brief assessment (max 100 words) covering:
-        1. Is this typically considered a rare/orphan drug?
-        2. Are there common supply chain constraints?
-        3. Any critical handling requirements (e.g., cold chain)?
-        
-        Do not provide medical advice. Focus on logistics and pharmacology facts.
-      `,
-      config: {
-        tools: [{ googleSearch: {} }]
-      }
+    const response = await fetch('/api/ai-analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'analyze', drugName, notes }),
     });
 
-    const text = response.text || "Analysis complete but no text returned.";
-    
-    // Extract grounding URLs from chunks for reporting
-    const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
-    const sources = groundingChunks
-      .filter((chunk: any) => chunk.web)
-      .map((chunk: any) => ({
-        title: chunk.web.title || 'Source',
-        uri: chunk.web.uri
-      }))
-      .filter((source: any) => source.uri);
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ error: 'AI analysis failed.' }));
+      throw new Error(err.error || `AI service returned ${response.status}`);
+    }
 
-    return { text, sources };
+    return await response.json();
   } catch (error: any) {
     console.error("Gemini analysis failed:", error);
-    throw error; // Re-throw so the UI can catch it and display the message
+    throw error;
   }
 };
 
 /**
- * Summarizes consultation details using Gemini.
+ * Summarizes consultation details via the AI proxy endpoint.
  */
 export const summarizeConsultation = async (reason: string): Promise<string> => {
   try {
-     const ai = getAIInstance();
-     const prompt = `Summarize the following patient consultation reason into a medical category (e.g., Cardiology, Dermatology, General) and a 1-sentence triage summary: "${reason}"`;
-     
-     const response = await ai.models.generateContent({
-      model: 'gemini-3-flash-preview',
-      contents: prompt,
+    const response = await fetch('/api/ai-analyze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'summarize', reason }),
     });
-    return response.text || "No summary generated.";
+
+    if (!response.ok) {
+      return "Summary failed.";
+    }
+
+    const data = await response.json();
+    return data.text || "No summary generated.";
   } catch (error) {
     console.error("Summary failed:", error);
     return "Summary failed.";

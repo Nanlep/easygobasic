@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
-  const user = StorageService.getCurrentUser();
+  const [user, setUser] = useState<User | null>(null);
   const [requests, setRequests] = useState<DrugRequest[]>([]);
   const [consults, setConsults] = useState<Consultation[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -26,27 +26,32 @@ export const Dashboard: React.FC = () => {
   const [passMsg, setPassMsg] = useState({ type: '', text: '' });
 
   // New Staff State
-  const [newUser, setNewUser] = useState({ name: '', username: '', password: '', role: UserRole.DOCTOR });
+  // New Staff State
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '', role: UserRole.DOCTOR });
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user?.role === UserRole.DOCTOR) setActiveTab('CONSULTS');
-    else if (user?.role === UserRole.PHARMACIST) setActiveTab('REQUESTS');
+    StorageService.getCurrentUser().then((u) => {
+      setUser(u);
+      if (u?.role === UserRole.DOCTOR) setActiveTab('CONSULTS');
+      else if (u?.role === UserRole.PHARMACIST) setActiveTab('REQUESTS');
+    });
     refreshData();
-  }, [user?.role]);
+  }, []);
 
   const refreshData = async () => {
     setIsLoading(true);
     try {
-      const [reqs, appointments, logs] = await Promise.all([
+      const [reqs, appointments, logs, staff] = await Promise.all([
         StorageService.getRequests(),
         StorageService.getConsultations(),
-        StorageService.getAuditLogs()
+        StorageService.getAuditLogs(),
+        StorageService.getUsers()
       ]);
       setRequests(reqs);
       setConsults(appointments);
       setAuditLogs(logs);
-      setUsers(StorageService.getUsers());
+      setUsers(staff);
     } catch (e) {
       console.error("Dashboard refresh error:", e);
     } finally {
@@ -93,32 +98,32 @@ export const Dashboard: React.FC = () => {
     }
   };
 
-  const handlePasswordChange = (e: React.FormEvent) => {
+  const handlePasswordChange = async (e: React.FormEvent) => {
     e.preventDefault();
     if (passForm.new !== passForm.confirm) {
       setPassMsg({ type: 'error', text: 'New passwords do not match' });
       return;
     }
     try {
-      StorageService.updateUserPassword(user!.username, passForm.new);
+      await StorageService.updateUserPassword(user!.username, passForm.new);
       setPassMsg({ type: 'success', text: 'Password successfully updated.' });
       setPassForm({ old: '', new: '', confirm: '' });
     } catch (err) { setPassMsg({ type: 'error', text: 'Update failed.' }); }
   };
 
-  const handleDeleteStaff = (id: string) => {
-    StorageService.deleteUser(id);
-    setDeleteId(null);
-    refreshData();
-  };
 
-  const handleAddUser = (e: React.FormEvent) => {
+
+  const handleAddUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    StorageService.addUser(newUser);
-    setNewUser({ name: '', username: '', password: '', role: UserRole.DOCTOR });
-    setPassMsg({ type: 'success', text: 'Staff provisioned successfully' });
-    setTimeout(() => setPassMsg({ type: '', text: '' }), 3000);
-    refreshData();
+    try {
+      await StorageService.addUser(newUser);
+      setNewUser({ name: '', email: '', password: '', role: UserRole.DOCTOR });
+      setPassMsg({ type: 'success', text: 'Staff provisioned. They must reset their password on first login.' });
+      setTimeout(() => setPassMsg({ type: '', text: '' }), 5000);
+      refreshData();
+    } catch (err: any) {
+      setPassMsg({ type: 'error', text: err.message || 'Provisioning failed.' });
+    }
   };
 
   const getStatusColorClasses = (status: RequestStatus | ConsultStatus) => {
@@ -409,9 +414,6 @@ export const Dashboard: React.FC = () => {
               </div>
               <div className="flex justify-between items-center text-[10px] text-slate-400 font-bold uppercase tracking-widest pt-3 border-t">
                  <span>Member since: {new Date(u.createdAt).toLocaleDateString()}</span>
-                 {u.username !== user.username && (
-                   <button onClick={() => setDeleteId(u.id)} className="text-red-500 hover:text-red-700 p-1"><Trash2 size={14} /></button>
-                 )}
               </div>
             </div>
           ))}
@@ -420,28 +422,32 @@ export const Dashboard: React.FC = () => {
 
       <div className="bg-slate-900 p-8 rounded-[2rem] text-white shadow-2xl h-fit">
         <h3 className="text-lg font-bold mb-6 flex items-center gap-2"><UserPlus size={20} className="text-red-500" /> Provision Personnel</h3>
+        {passMsg.text && (
+          <div className={`mb-4 p-3 rounded-xl text-sm font-bold text-center ${passMsg.type === 'success' ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-800' : 'bg-red-900/30 text-red-400 border border-red-800'}`}>{passMsg.text}</div>
+        )}
         <form onSubmit={handleAddUser} className="space-y-4">
           <div>
             <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Full Name</label>
-            <input required type="text" className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} />
+            <input required type="text" className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" placeholder="Dr. Jane Smith" value={newUser.name} onChange={e => setNewUser({...newUser, name: e.target.value})} />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Username</label>
-            <input required type="text" className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" value={newUser.username} onChange={e => setNewUser({...newUser, username: e.target.value})} />
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Email Address</label>
+            <input required type="email" className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" placeholder="staff@easygopharm.com" value={newUser.email} onChange={e => setNewUser({...newUser, email: e.target.value})} />
           </div>
           <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Temporary Key</label>
-            <input required type="password" placeholder="••••••••" className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
-          </div>
-          <div>
-            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Permission Tier</label>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Role</label>
             <select className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" value={newUser.role} onChange={e => setNewUser({...newUser, role: e.target.value as UserRole})}>
               <option value={UserRole.DOCTOR}>Medical Doctor</option>
               <option value={UserRole.PHARMACIST}>Pharmacist</option>
               <option value={UserRole.SUPER_ADMIN}>System Administrator</option>
             </select>
           </div>
-          <button type="submit" className="w-full py-4 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl shadow-lg mt-4">Create Account</button>
+          <div>
+            <label className="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Temporary Password</label>
+            <input required type="password" placeholder="Min 6 characters" minLength={6} className="w-full bg-slate-800 border-slate-700 rounded-xl p-3 text-sm" value={newUser.password} onChange={e => setNewUser({...newUser, password: e.target.value})} />
+            <p className="text-[9px] text-slate-500 mt-1">Staff will be required to change this on first login.</p>
+          </div>
+          <button type="submit" className="w-full py-4 bg-red-700 hover:bg-red-800 text-white font-bold rounded-xl shadow-lg mt-4">Create Staff Account</button>
         </form>
       </div>
     </div>
@@ -527,20 +533,7 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Modal */}
-        {deleteId && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-            <div className="bg-white p-8 rounded-3xl max-w-sm w-full text-center shadow-2xl border border-red-100">
-              <div className="mx-auto w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-6"><ShieldAlert size={32} /></div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Delete Staff Account?</h3>
-              <p className="text-slate-500 text-sm mb-8">This action will immediately revoke access. Historical logs will be preserved for compliance.</p>
-              <div className="flex gap-4">
-                <button onClick={() => setDeleteId(null)} className="flex-1 py-3 bg-slate-100 text-slate-900 font-bold rounded-xl">Cancel</button>
-                <button onClick={() => handleDeleteStaff(deleteId)} className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl shadow-lg shadow-red-900/20">Delete Account</button>
-              </div>
-            </div>
-          </div>
-        )}
+
       </div>
     </div>
   );

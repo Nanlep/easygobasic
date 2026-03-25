@@ -18,11 +18,16 @@ import {
 export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const user = StorageService.getCurrentUser();
+  const [user, setUser] = React.useState<any>(null);
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
 
-  const handleLogout = () => {
-    StorageService.logout();
+  React.useEffect(() => {
+    StorageService.getCurrentUser().then(setUser);
+  }, [location.pathname]);
+
+  const handleLogout = async () => {
+    await StorageService.logout();
+    setUser(null);
     navigate('/login');
   };
 

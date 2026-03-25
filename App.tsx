@@ -1,6 +1,7 @@
 import React from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import { Landing } from './pages/Landing';
 import { DrugRequestForm } from './pages/DrugRequestForm';
 import { ConsultationForm } from './pages/ConsultationForm';
@@ -9,6 +10,7 @@ import { Dashboard } from './pages/admin/Dashboard';
 import { Legal } from './pages/Legal';
 import { NotFound } from './pages/NotFound';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { UserRole } from './types';
 
 const App: React.FC = () => {
   return (
@@ -24,7 +26,11 @@ const App: React.FC = () => {
                   <Route path="/" element={<Landing />} />
                   <Route path="/request-drug" element={<DrugRequestForm />} />
                   <Route path="/book-consult" element={<ConsultationForm />} />
-                  <Route path="/admin" element={<Dashboard />} />
+                  <Route path="/admin" element={
+                    <ProtectedRoute allowedRoles={[UserRole.SUPER_ADMIN, UserRole.DOCTOR, UserRole.PHARMACIST]}>
+                      <Dashboard />
+                    </ProtectedRoute>
+                  } />
                   <Route path="/legal/terms" element={<Legal />} />
                   <Route path="/legal/privacy" element={<Legal />} />
                   <Route path="*" element={<NotFound />} />
