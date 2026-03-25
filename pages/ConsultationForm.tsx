@@ -3,9 +3,12 @@ import React, { useState } from 'react';
 import { StorageService } from '../services/storageService';
 import { EmailService } from '../services/emailService';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { useToast } from '../components/Toast';
 import { CalendarCheck, Clock, Phone, Mail, User as UserIcon, AlertCircle, Upload, CheckCircle, X } from 'lucide-react';
 
 export const ConsultationForm: React.FC = () => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     patientName: '',
     contactEmail: '',
@@ -63,7 +66,7 @@ export const ConsultationForm: React.FC = () => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size exceeds 5MB limit.");
+      showToast("File size exceeds 5MB limit. Please upload a smaller file.", "error");
       return;
     }
 
@@ -99,7 +102,12 @@ export const ConsultationForm: React.FC = () => {
   return (
     <div className="py-12 bg-slate-50">
       <div className="max-w-2xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
+        >
           <div className="bg-slate-900 px-8 py-10 text-white flex justify-between items-center">
             <div>
               <h1 className="text-2xl font-bold">Medical Expert Triage</h1>
@@ -174,12 +182,12 @@ export const ConsultationForm: React.FC = () => {
             <button 
               type="submit" 
               disabled={isSubmitting}
-              className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 transition-all shadow-lg disabled:opacity-50"
+              className="w-full py-5 bg-blue-600 text-white font-bold rounded-2xl hover:bg-blue-700 hover:-translate-y-1 transition-all shadow-lg disabled:opacity-50"
             >
               {isSubmitting ? 'Securing Session...' : 'Confirm Consultation Booking'}
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );

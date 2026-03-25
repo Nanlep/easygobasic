@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Logo } from './Logo';
 import { StorageService } from '../services/storageService';
 import { 
@@ -34,9 +35,9 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
   const isActive = (path: string) => location.pathname === path ? "text-red-700 font-semibold" : "text-slate-600 hover:text-red-700";
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans selection:bg-red-200 selection:text-red-900">
       {/* Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-50">
+      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200/50 sticky top-0 z-50 transition-all duration-300">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <Link to="/" className="flex-shrink-0">
@@ -95,8 +96,19 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
       </header>
 
       {/* Main Content */}
-      <main className="flex-grow">
-        {children}
+      <main className="flex-grow flex flex-col">
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={location.pathname}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="flex-grow flex flex-col"
+          >
+            {children}
+          </motion.div>
+        </AnimatePresence>
       </main>
 
       {/* Footer */}

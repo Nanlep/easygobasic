@@ -2,7 +2,9 @@
 import React, { useState } from 'react';
 import { StorageService } from '../services/storageService';
 import { EmailService } from '../services/emailService';
+import { useToast } from '../components/Toast';
 import { Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { AlertCircle, CheckCircle, Upload, X, Info, Plus, Trash2, Pill } from 'lucide-react';
 
 interface DrugEntry {
@@ -22,6 +24,7 @@ const emptyDrug = (): DrugEntry => ({
 });
 
 export const DrugRequestForm: React.FC = () => {
+  const { showToast } = useToast();
   const [formData, setFormData] = useState({
     requesterName: '',
     requesterType: 'PATIENT',
@@ -131,7 +134,7 @@ export const DrugRequestForm: React.FC = () => {
     if (!file) return;
 
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size exceeds 5MB limit.");
+      showToast("File size exceeds 5MB limit. Please upload a smaller file.", "error");
       return;
     }
 
@@ -176,7 +179,12 @@ export const DrugRequestForm: React.FC = () => {
   return (
     <div className="py-12 bg-slate-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        <div className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden"
+        >
           <div className="bg-slate-900 px-8 py-10 text-white relative">
             <div className="absolute top-0 right-0 p-8 opacity-10">
               <AlertCircle size={120} />
@@ -252,10 +260,19 @@ export const DrugRequestForm: React.FC = () => {
               </div>
 
               <div className="space-y-6">
-                {drugs.map((drug, index) => (
-                  <div key={index} className="relative bg-slate-50 rounded-2xl p-6 border border-slate-200 group">
-                    {/* Drug header */}
-                    <div className="flex items-center justify-between mb-5">
+                <AnimatePresence>
+                  {drugs.map((drug, index) => (
+                    <motion.div 
+                      key={index} // Need unique ID ideally, but using index for now if no sorts happen
+                      layout
+                      initial={{ opacity: 0, scale: 0.95, y: -20 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, height: 0, overflow: 'hidden' }}
+                      transition={{ duration: 0.3 }}
+                      className="relative bg-slate-50 rounded-2xl p-6 border border-slate-200 group"
+                    >
+                      {/* Drug header */}
+                      <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-red-700 text-white rounded-lg flex items-center justify-center text-[10px] font-bold">
                           <Pill size={14} className="-rotate-45" />
@@ -338,8 +355,9 @@ export const DrugRequestForm: React.FC = () => {
                         </div>
                       </div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
+                </AnimatePresence>
               </div>
 
               {/* Add another drug button (bottom) */}
@@ -420,7 +438,7 @@ export const DrugRequestForm: React.FC = () => {
               {isSubmitting ? 'Securing Data...' : `Submit ${drugs.length} Medication${drugs.length > 1 ? 's' : ''}`}
             </button>
           </form>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
