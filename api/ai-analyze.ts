@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (type === 'analyze') {
       // Drug request analysis with Google Search grounding
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3-flash-preview',
         contents: `
           You are a pharmaceutical logic assistant for a rare drug sourcing platform.
           Analyze the following drug request:
@@ -61,7 +61,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const prompt = `Summarize the following patient consultation reason into a medical category (e.g., Cardiology, Dermatology, General) and a 1-sentence triage summary: "${reason}"`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-2.0-flash',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
       });
 
