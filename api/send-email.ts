@@ -61,7 +61,7 @@ export default async function handler(req: any, res: any) {
     const timestampWAT = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'full', timeStyle: 'short' });
 
     const summary = Object.entries(data || {})
-      .filter(([key]) => !['prescription', 'attachment', 'agreedToTerms', 'requesterTypeOther', 'submittedAt'].includes(key))
+      .filter(([key]) => !['prescription', 'attachment', 'agreedToTerms', 'requesterTypeOther', 'submittedAt', 'drugs'].includes(key))
       .map(([key, value]) => `<li><strong>${key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</strong> ${value}</li>`)
       .join('');
 

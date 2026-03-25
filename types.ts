@@ -27,6 +27,14 @@ export interface User {
   status: 'ACTIVE' | 'INACTIVE';
 }
 
+export interface DrugItem {
+  genericName: string;
+  brandName?: string;
+  dosageStrength?: string;
+  quantity: string;
+  urgency: 'NORMAL' | 'HIGH' | 'CRITICAL';
+}
+
 export interface DrugRequest {
   id: string;
   requesterName: string;
@@ -34,11 +42,14 @@ export interface DrugRequest {
   contactEmail: string;
   contactPhone?: string;
   address: string;
+  // Legacy single-drug fields (backward compat with old rows)
   genericName: string;
   brandName?: string;
   dosageStrength?: string;
   quantity: string;
   urgency: 'NORMAL' | 'HIGH' | 'CRITICAL';
+  // Multi-drug support
+  drugs?: DrugItem[];
   notes: string;
   status: RequestStatus;
   createdAt: string;

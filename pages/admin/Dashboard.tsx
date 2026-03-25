@@ -207,10 +207,33 @@ export const Dashboard: React.FC = () => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center gap-2">
-                       <span className="font-bold text-slate-700">{req.genericName}</span>
-                       <span className={`text-[10px] font-extrabold px-1.5 py-0.5 rounded ${req.urgency === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-slate-100'}`}>{req.urgency}</span>
-                    </div>
+                    {req.drugs && req.drugs.length > 0 ? (
+                      <div className="space-y-2">
+                        {req.drugs.length > 1 && (
+                          <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-0.5 rounded inline-block mb-1">
+                            {req.drugs.length} Medications
+                          </div>
+                        )}
+                        {req.drugs.map((d, i) => (
+                          <div key={i} className="flex flex-col gap-0.5 pb-2 border-b border-slate-100 last:border-0 last:pb-0">
+                             <div className="flex items-center gap-2">
+                               <span className="font-bold text-slate-700 text-sm">{d.genericName}</span>
+                               <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded ${d.urgency === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-slate-100'}`}>{d.urgency}</span>
+                             </div>
+                             <span className="text-xs text-slate-500">{d.dosageStrength} • Qty: {d.quantity}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      // Fallback for legacy single-drug orders
+                      <div className="flex flex-col gap-0.5">
+                        <div className="flex items-center gap-2">
+                           <span className="font-bold text-slate-700 text-sm">{req.genericName}</span>
+                           <span className={`text-[8px] font-extrabold px-1.5 py-0.5 rounded ${req.urgency === 'CRITICAL' ? 'bg-red-100 text-red-700' : 'bg-slate-100'}`}>{req.urgency}</span>
+                        </div>
+                        <span className="text-xs text-slate-500">{req.dosageStrength} • Qty: {req.quantity}</span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4">
                     {req.prescription ? (
