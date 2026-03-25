@@ -10,6 +10,7 @@ export const ConsultationForm: React.FC = () => {
     patientName: '',
     contactEmail: '',
     contactPhone: '',
+    address: '',
     preferredDate: '',
     reason: '',
   });
@@ -23,9 +24,11 @@ export const ConsultationForm: React.FC = () => {
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
+      const submittedAt = new Date().toISOString();
       const payload = {
         ...formData,
-        attachment: attachment || undefined
+        attachment: attachment || undefined,
+        submittedAt,
       };
 
       // 1. Save to DB (Primary)
@@ -83,9 +86,10 @@ export const ConsultationForm: React.FC = () => {
             <CalendarCheck size={40} />
           </div>
           <h2 className="text-2xl font-bold text-slate-900 mb-2">Appointment Scheduled</h2>
-          <p className="text-slate-600 mb-6">
+          <p className="text-slate-600 mb-4">
             Your consultation request has been secured. Confirmation emails have been sent to our medical board.
           </p>
+          <div className="text-xs text-slate-400 mb-6">Submitted: {new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'full', timeStyle: 'short' })} WAT</div>
           <Link to="/" className="text-slate-900 font-bold hover:underline">Return Home</Link>
         </div>
       </div>
@@ -132,6 +136,11 @@ export const ConsultationForm: React.FC = () => {
                   <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Phone</label>
                   <input required name="contactPhone" type="tel" className="w-full rounded-2xl border-slate-100 bg-slate-50 p-3 border font-bold text-slate-900" placeholder="+1..." onChange={handleChange} />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-widest mb-2">Full Address</label>
+                <textarea required name="address" rows={2} className="w-full rounded-2xl border-slate-100 bg-slate-50 p-3 border font-bold text-slate-900" placeholder="Street address, city, state, postal code, country" onChange={handleChange} value={formData.address}></textarea>
               </div>
 
               <div>

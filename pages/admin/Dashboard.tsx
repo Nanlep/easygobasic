@@ -179,6 +179,8 @@ export const Dashboard: React.FC = () => {
                   <td className="px-6 py-4">
                     <div className="font-bold text-slate-900">{req.requesterName}</div>
                     <div className="text-xs text-slate-500">{req.contactEmail}</div>
+                    {req.address && <div className="text-xs text-slate-400 mt-0.5">📍 {req.address}</div>}
+                    <div className="text-[10px] text-slate-400 mt-1">🕐 {new Date(req.createdAt).toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' })} WAT</div>
                     {/* Display AI Analysis and Grounding Sources as required by guidelines */}
                     {req.aiAnalysis && (
                       <div className="mt-2 p-3 bg-indigo-50 border border-indigo-100 rounded-xl text-[10px] text-indigo-700 max-w-xs animate-in fade-in slide-in-from-top-1">
@@ -268,6 +270,8 @@ export const Dashboard: React.FC = () => {
              <div className="mb-4">
                 <div className="font-extrabold text-lg text-slate-900">{c.patientName}</div>
                 <div className="text-xs text-slate-500">{new Date(c.preferredDate).toLocaleString()}</div>
+                {c.address && <div className="text-xs text-slate-400 mt-0.5">📍 {c.address}</div>}
+                <div className="text-[10px] text-slate-400 mt-1">🕐 Submitted: {new Date(c.createdAt).toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'medium', timeStyle: 'short' })} WAT</div>
              </div>
              <div className="bg-slate-50 p-3 rounded-xl text-sm text-slate-600 mb-4 line-clamp-2 italic">"{c.reason}"</div>
              <div className="flex flex-col gap-3">

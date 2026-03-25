@@ -33,6 +33,7 @@ export interface DrugRequest {
   requesterType: string;
   contactEmail: string;
   contactPhone?: string;
+  address: string;
   genericName: string;
   brandName?: string;
   dosageStrength?: string;
@@ -52,6 +53,7 @@ export interface Consultation {
   patientName: string;
   contactEmail: string;
   contactPhone: string;
+  address: string;
   preferredDate: string;
   reason: string;
   status: ConsultStatus;

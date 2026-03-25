@@ -58,8 +58,10 @@ export default async function handler(req: any, res: any) {
       console.warn("[API] WARNING: FROM_EMAIL is not set. Falling back to 'onboarding@resend.dev'. External delivery WILL fail.");
     }
 
+    const timestampWAT = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'full', timeStyle: 'short' });
+
     const summary = Object.entries(data || {})
-      .filter(([key]) => !['prescription', 'attachment', 'agreedToTerms', 'requesterTypeOther'].includes(key))
+      .filter(([key]) => !['prescription', 'attachment', 'agreedToTerms', 'requesterTypeOther', 'submittedAt'].includes(key))
       .map(([key, value]) => `<li><strong>${key.replace(/([A-Z])/g, ' $1').toLowerCase()}:</strong> ${value}</li>`)
       .join('');
 
@@ -71,6 +73,7 @@ export default async function handler(req: any, res: any) {
         <div style="padding: 32px;">
           <h2 style="color: #0f172a; margin-top: 0;">${isUserConfirm ? `Hello ${name || 'Valued Patient'},` : 'System Alert: New Submission'}</h2>
           <p>${isUserConfirm ? `We have successfully received your <strong>${submissionType}</strong>.` : `A new <strong>${submissionType}</strong> has been logged.`}</p>
+          <p style="font-size: 13px; color: #64748b; margin-bottom: 0;"><strong>Date & Time:</strong> ${timestampWAT} (WAT)</p>
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
             <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.6;">${summary}</ul>
           </div>

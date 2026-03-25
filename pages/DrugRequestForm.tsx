@@ -12,6 +12,7 @@ export const DrugRequestForm: React.FC = () => {
     requesterTypeOther: '',
     contactEmail: '',
     contactPhone: '',
+    address: '',
     genericName: '',
     brandName: '',
     dosageStrength: '',
@@ -41,18 +42,21 @@ export const DrugRequestForm: React.FC = () => {
         ? (formData.requesterTypeOther || 'OTHER') 
         : formData.requesterType;
 
+      const submittedAt = new Date().toISOString();
       const requestPayload = { 
         requesterName: formData.requesterName,
         requesterType: finalRequesterType,
         contactEmail: formData.contactEmail,
         contactPhone: formData.contactPhone,
+        address: formData.address,
         genericName: formData.genericName,
         brandName: formData.brandName,
         dosageStrength: formData.dosageStrength,
         quantity: formData.quantity,
         urgency: formData.urgency as 'NORMAL' | 'HIGH' | 'CRITICAL',
         notes: formData.notes,
-        prescription: attachment || undefined 
+        prescription: attachment || undefined,
+        submittedAt,
       };
 
       // 1. Save to Database (Primary)
@@ -114,9 +118,10 @@ export const DrugRequestForm: React.FC = () => {
           <p className="text-slate-600 mb-4">
             Your request for <strong>{formData.genericName}</strong> has been securely logged. Confirmation emails have been sent to our logistics team.
           </p>
-          <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-500 mb-8 border border-slate-100">
+          <div className="bg-slate-50 p-4 rounded-xl text-sm text-slate-500 mb-4 border border-slate-100">
             Check your Inbox shortly for verification.
           </div>
+          <div className="text-xs text-slate-400 mb-8">Submitted: {new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos', dateStyle: 'full', timeStyle: 'short' })} WAT</div>
           <Link to="/" className="text-red-700 font-bold hover:underline">Return Home</Link>
         </div>
       </div>
@@ -176,6 +181,10 @@ export const DrugRequestForm: React.FC = () => {
                   <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Phone Number</label>
                   <input required name="contactPhone" type="tel" className="w-full rounded-xl border-slate-200 p-3 border font-medium" placeholder="+1 (555) 000-0000" onChange={handleChange} />
                 </div>
+              </div>
+              <div className="mt-4">
+                <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Full Address</label>
+                <textarea required name="address" rows={2} className="w-full rounded-xl border-slate-200 p-3 border font-medium focus:ring-red-500 focus:border-red-500" placeholder="Street address, city, state, postal code, country" onChange={handleChange} value={formData.address}></textarea>
               </div>
             </section>
 
