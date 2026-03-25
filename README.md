@@ -93,6 +93,6 @@ EasygoPharm implements a **Zero-Trust Architecture**:
 ---
 
 ## 📞 Support & Contact
-For technical inquiries or security whitepaper requests, contact the engineering team at `info@easygopharm.com`.
+For technical inquiries or security whitepaper requests, contact the engineering team at `easygo@easygopharm.com`.
 
 &copy; 2025 EasygoPharm Inc. All rights reserved.
