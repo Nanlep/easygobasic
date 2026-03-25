@@ -27,11 +27,9 @@ export const ConsultationForm: React.FC = () => {
     setIsSubmitting(true);
     setErrorMsg(null);
     try {
-      const submittedAt = new Date().toISOString();
       const payload = {
         ...formData,
         attachment: attachment || undefined,
-        submittedAt,
       };
 
       // 1. Save to DB (Primary)

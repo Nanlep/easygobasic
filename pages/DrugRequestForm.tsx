@@ -74,7 +74,6 @@ export const DrugRequestForm: React.FC = () => {
         ? (formData.requesterTypeOther || 'OTHER') 
         : formData.requesterType;
 
-      const submittedAt = new Date().toISOString();
       const firstDrug = drugs[0];
 
       const requestPayload = { 
@@ -93,7 +92,6 @@ export const DrugRequestForm: React.FC = () => {
         drugs,
         notes: formData.notes,
         prescription: attachment || undefined,
-        submittedAt,
       };
 
       // 1. Save to Database (Primary)
