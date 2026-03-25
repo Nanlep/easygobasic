@@ -67,7 +67,9 @@ export default async function handler(req: any, res: any) {
 
     const htmlContent = `
       <div style="font-family: sans-serif; color: #334155; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+        <!-- Header with Profile Picture / Logo -->
         <div style="background-color: #0f172a; padding: 24px; text-align: center;">
+          <img src="https://PLACEHOLDER_FOR_YOUR_LOGO_URL.png" alt="EasygoPharm Logo" style="width: 60px; height: 60px; border-radius: 50%; object-fit: cover; margin-bottom: 12px; border: 2px solid #ffffff;" />
           <h1 style="color: #ffffff; margin: 0; font-size: 24px;">EasygoPharm</h1>
         </div>
         <div style="padding: 32px;">
@@ -76,6 +78,17 @@ export default async function handler(req: any, res: any) {
           <p style="font-size: 13px; color: #64748b; margin-bottom: 0;"><strong>Date & Time:</strong> ${timestampWAT} (WAT)</p>
           <div style="background-color: #f8fafc; padding: 20px; border-radius: 8px; margin: 24px 0;">
             <ul style="list-style: none; padding: 0; margin: 0; font-size: 14px; line-height: 1.6;">${summary}</ul>
+          </div>
+          <!-- Email Signature -->
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e2e8f0;">
+            <p style="margin: 0; font-size: 14px; color: #64748b;">Best regards,</p>
+            <div style="display: flex; align-items: center; margin-top: 12px;">
+              <img src="https://PLACEHOLDER_FOR_YOUR_LOGO_URL.png" alt="Easygo Logo" style="width: 40px; height: 40px; border-radius: 8px; margin-right: 12px; object-fit: cover;" />
+              <div>
+                <p style="margin: 0; font-weight: bold; color: #0f172a; font-size: 16px;">EasygoPharm Team</p>
+                <p style="margin: 0; font-size: 12px; color: #64748b;">Healthcare, simplified.</p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
