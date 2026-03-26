@@ -24,7 +24,7 @@ export interface User {
   role: UserRole;
   name: string;
   createdAt: string;
-  status: 'ACTIVE' | 'INACTIVE';
+  status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
 }
 
 export interface DrugItem {

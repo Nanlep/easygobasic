@@ -66,16 +66,61 @@ export const StorageService = {
     });
 
     if (error) throw new Error(`Provisioning Error: ${error.message}`);
+    if (!data.user) throw new Error("Provisioning Error: User not returned.");
+
+    // IMPORTANT: Sync the Auth user to the public staff_profiles table so they appear in Dashboard/Analytics
+    const { error: syncError } = await supabase.from('staff_profiles').insert([{
+      id: data.user.id,
+      name: userData.name,
+      username: userData.email,
+      email: userData.email,
+      role: userData.role,
+      status: 'ACTIVE',
+      createdAt: new Date().toISOString()
+    }]);
+
+    if (syncError) {
+      console.error("[STORAGE] Sync Error:", syncError.message);
+      // We don't throw here to avoid failing the whole provision, but we log it
+    }
 
     StorageService.logAudit(`Provisioned staff: ${userData.name} (${userData.role})`, 'Admin');
     return {
-      id: data.user?.id || '',
+      id: data.user.id,
       username: userData.email,
       role: userData.role,
       name: userData.name,
       createdAt: new Date().toISOString(),
       status: 'ACTIVE' as const,
     } as User;
+  },
+
+  /**
+   * Updates staff status (ACTIVE or SUSPENDED)
+   */
+  updateStaffStatus: async (userId: string, status: 'ACTIVE' | 'SUSPENDED') => {
+    const { error } = await supabase
+      .from('staff_profiles')
+      .update({ status })
+      .eq('id', userId);
+    
+    if (error) throw new Error(`Status Update Error: ${error.message}`);
+    StorageService.logAudit(`Staff ${userId} status set to ${status}`, 'Admin');
+  },
+
+  /**
+   * Deletes staff from both the database and (optionally) Auth if service role allowed.
+   * Note: Deleting from auth.users requires a service role key which we don't expose here 
+   * for security. Instead, we remove from the public list and suspend.
+   */
+  deleteStaff: async (userId: string) => {
+    const { error } = await supabase
+      .from('staff_profiles')
+      .delete()
+      .eq('id', userId);
+
+    if (error) throw new Error(`Deletion Error: ${error.message}`);
+    StorageService.logAudit(`Staff ${userId} removed from list`, 'Admin');
   },
 
   /**

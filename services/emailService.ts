@@ -57,5 +57,32 @@ export const EmailService = {
     } catch (error) {
       console.error("[ADMIN EMAIL PROXY] Network connectivity error:", error);
     }
+  },
+
+  /**
+   * Sends a welcome email to newly provisioned staff.
+   */
+  sendWelcomeEmail: async (email: string, name: string, role: string) => {
+    try {
+      const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          notificationType: 'WELCOME_STAFF',
+          email,
+          name,
+          role,
+          data: { provisioned: true } // Filler data to satisfy API
+        })
+      });
+
+      if (!response.ok) {
+        console.error("[WELCOME EMAIL PROXY] Server Error:", await response.text());
+      } else {
+        console.log("[WELCOME EMAIL PROXY] Welcome email sent successfully.");
+      }
+    } catch (error) {
+      console.error("[WELCOME EMAIL PROXY] Network connectivity error:", error);
+    }
   }
 };
